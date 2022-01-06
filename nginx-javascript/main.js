@@ -13,6 +13,9 @@ function hello(r) {
   return
 }
 
+/*
+  Performs a subrequest to World Time API and returns the datetime field as a response
+*/
 function time(r) {
   r.subrequest(
     '/proxy/worldtimeapi/api/timezone/Australia/Melbourne',
@@ -67,6 +70,10 @@ function modify_response_header(r) {
 }
 
 var cr = require('crypto')
+
+/*
+  Returns the SHA1 hash of the request ID
+ */
 function hash_req_id(r) {
   return cr.createHash('sha1').update(r.variables.request_id).digest('base64url');
 }
