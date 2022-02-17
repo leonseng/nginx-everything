@@ -1,0 +1,9 @@
+services:
+  websocket-server:
+    image: ksdn117/web-socket-test
+  proxy:
+    image: nginx
+    ports:
+      - "8020:8020"
+    volumes:
+      - "./nginx.conf:/etc/nginx/nginx.conf"
