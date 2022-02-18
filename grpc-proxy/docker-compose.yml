@@ -1,0 +1,19 @@
+services:
+  server:
+    build: server/
+    image: route-guide-server
+    command: [ "-addr", "0.0.0.0:50051" ]
+  proxy:
+    image: nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - "./nginx.conf:/etc/nginx/nginx.conf"
+    depends_on:
+      - server
+  client:
+    build: client/
+    image: route-guide-client
+    command: [ "-addr", "proxy:80" ]
+    depends_on:
+      - proxy
