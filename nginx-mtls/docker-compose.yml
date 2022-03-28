@@ -1,0 +1,18 @@
+services:
+  nginx-mtls:
+    image: nginx
+    ports:
+      - $MTLS_PROXY_PORT:8080
+      - $MTLS_PROXY_NO_CLIENT_CERT_PORT:8081
+      - $MTLS_SERVER_PORT:8443
+    command:
+      - nginx-debug
+      - "-g"
+      - "daemon off;"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - $CERT_DIR/client.crt:/etc/nginx/certs/client.crt:ro
+      - $CERT_DIR/client.key:/etc/nginx/certs/client.key:ro
+      - $CERT_DIR/server.crt:/etc/nginx/certs/server.crt:ro
+      - $CERT_DIR/server.key:/etc/nginx/certs/server.key:ro
+      - $CERT_DIR/rootCA.crt:/etc/nginx/certs/ca.crt:ro
