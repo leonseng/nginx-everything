@@ -108,6 +108,7 @@ Configure NGINX Plus as the OpenID Connect relying party:
 ## Testing The Setup
 
 1. In a browser, enter the address of your NGINX Plus instance. You should be directed to the Auth0 login page, as shown in the example below:
+
     ![](images/login-test.png)
 1. Try to log in using the credentials of the user created in the Auth0 database.
 
