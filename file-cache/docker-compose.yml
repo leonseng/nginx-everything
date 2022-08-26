@@ -1,0 +1,13 @@
+services:
+  file-server:
+    image: halverneus/static-file-server:latest
+    volumes:
+      - ./README.md:/web/README.md:ro
+  nginx:
+    image: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - 9090:80
+    depends_on:
+      - file-server
