@@ -1,0 +1,38 @@
+services:
+  mosquitto-broker:
+    image: eclipse-mosquitto
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+  proxy:
+    image: nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/stream.js:/etc/nginx/stream.js:ro
+      - ./nginx/certs/server.key:/etc/nginx/certs/key.pem:ro
+      - ./nginx/certs/serverchain.pem:/etc/nginx/certs/cert.pem:ro
+    ports:
+      - 1883:1883
+      - 8883:8883
+      - 443:443
+    depends_on:
+      - mosquitto-broker
+  # sub_client:
+  #   image: hivemq/mqtt-cli
+  #   command: [ "sub", "-t", "test", "-h", "proxy", "-p", "8883" ]
+  #   depends_on:
+  #     - proxy
+  # pub_client:
+  #   image: hivemq/mqtt-cli
+  #   entrypoint: [ "/bin/demo.sh" ]
+  #   volumes:
+  #     - ./pub_client/demo.sh:/bin/demo.sh:ro
+  #     - ./pub_client/cert.pem:/bin/mqtt-cert.pem:ro
+  #   depends_on:
+  #     - proxy
+
+
+  # pub_client:
+  #   build:
+  #     context: ./pub_client
+  #   depends_on:
+  #     - proxy
