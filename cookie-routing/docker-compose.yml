@@ -1,0 +1,21 @@
+services:
+  reverse-proxy:
+    image: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - 8080:80
+
+  site-a:
+    image: nginx
+    volumes:
+      - ./site-a.nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./site-a.index.html:/www/data/index.html:ro
+      - ./site-a.cookie.js:/www/data/cookie.js:ro
+
+  site-b:
+    image: nginx
+    volumes:
+      - ./site-b.nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./site-b.index.html:/www/data/index.html:ro
+      - ./site-b.cookie.js:/www/data/cookie.js:ro
