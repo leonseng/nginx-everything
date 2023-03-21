@@ -1,0 +1,12 @@
+services:
+  client-proxy:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - "./client-proxy.nginx.conf:/etc/nginx/nginx.conf"
+      - "./proxy_protocol.js:/etc/nginx/stream_conf.d/proxy_protocol.js"
+  tcp-proxy:
+    build: .
+    volumes:
+      - "./tcp-proxy.nginx.conf:/etc/nginx/nginx.conf"
