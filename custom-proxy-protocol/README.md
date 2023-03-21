@@ -19,7 +19,7 @@ $ curl -k --connect-to httpbin.org:80:localhost:8080 http://httpbin.org/ip
 }
 ```
 
-You show see information from the custom PROXY protocol header `1.2.3.4:1234 to 5.6.7.8:443` in the logs:
+You should see information from the custom PROXY protocol header `1.2.3.4:1234 to 5.6.7.8:443` in the logs:
 ```
 custom-proxy-protocol-tcp-proxy-1     | 172.20.0.2 [21/Mar/2023:06:15:43 +0000] TCP 200 5926 251 0.982 | SNI: httpbin.org | PROXY protocol: 1.2.3.4:1234 to 5.6.7.8:443
 custom-proxy-protocol-client-proxy-1  | 172.20.0.1 - - [21/Mar/2023:06:15:43 +0000] "GET /ip HTTP/1.1" 200 33 "-" "curl/7.68.0"
