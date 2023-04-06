@@ -1,0 +1,14 @@
+services:
+  nginx:
+    image: macbre/nginx-http3
+    volumes:
+      - "./nginx.conf:/etc/nginx/nginx.conf"
+      - "./.tmp/cert.pem:/etc/nginx/ssl/cert.pem"
+      - "./.tmp/key.pem:/etc/nginx/ssl/key.pem"
+  curl-h3:
+    image: ymuski/curl-http3
+    entrypoint: [ "tail" ]
+    command:
+      - "-f"
+      - "/dev/null"
+    depends_on: [ nginx ]
