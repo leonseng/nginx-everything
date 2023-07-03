@@ -1,8 +1,11 @@
 function mask_body(r, data, flags) {
   r.variables.masked_request_json = mask(r.requestText);
 
-  if (data) {
-    r.variables.masked_response_json = mask(data);
+  // response data can come in multiple chunks. Merge all chunks before masking data as a whole
+  r.variables.masked_response_json += data
+
+  if (flags.last) {
+    r.variables.masked_response_json = mask(r.variables.masked_response_json);
   }
 
   r.sendBuffer(data, flags);
