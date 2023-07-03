@@ -4,7 +4,9 @@ This example demonstrates the logging the request and response body, but with po
 
 This is useful for troubleshooting in production environment where you do not want live customer data to be stored in the logs.
 
-A [JSON file containing sample sensitive information](./sensitive.json) is also provided in this demo.
+The masking is performed via NGINX Javascript function `mask_body` in [log.js](./log.js), which is executed when the response comes back from the backend via the [js_body_filter](http://nginx.org/en/docs/http/ngx_http_js_module.html#js_body_filter) directive. `mask_body` masks the request and response JSON bodies and stores them in the `r.variables.masked_request_json` and `r.variables.masked_response_json` variables, which are then referenced in the [log_format](http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format) directive found in [nginx.conf](./nginx.conf).
+
+The logging of the masked request/response body can be toggled by setting the `$troubleshoot` variable to `0` or `1` in [nginx.conf](./nginx.conf).
 
 ## Instructions
 
@@ -13,7 +15,7 @@ Spin up the environment by running
 docker compose up -d
 ```
 
-Use `curl` to send [sensitive.json](./sensitive.json) to NGINX, which proxies the request to a `httpbin` backend container.
+A [JSON file containing sample sensitive information](./sensitive.json) is also provided in this demo. Use `curl` to send [sensitive.json](./sensitive.json) to NGINX, which proxies the request to a `httpbin` backend container.
 ```
 $ curl -H "Connection: Closed" -X POST localhost:8080/anything --data @sensitive.json
 {
