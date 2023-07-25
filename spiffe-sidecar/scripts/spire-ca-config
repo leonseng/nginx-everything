@@ -1,0 +1,11 @@
+[req]
+distinguished_name  = dn
+days                = 3650
+x509_extensions     = v3_ca
+
+[ dn ]
+
+[ v3_ca ]
+subjectKeyIdentifier = hash
+keyUsage = critical, Certificate Sign
+basicConstraints = CA:TRUE,pathlen:3

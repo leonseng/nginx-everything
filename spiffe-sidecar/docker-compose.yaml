@@ -1,0 +1,71 @@
+services:
+  spire-server:
+    build:
+      dockerfile: ./docker/spire/server/Dockerfile
+    volumes:
+      - ./docker/spire/server/server.conf:/spire/conf/server/server.conf:ro
+      - ./.certs/rootCA.pem:/spire/conf/server/server.pem:ro
+      - ./.certs/rootCA-key.pem:/spire/conf/server/server-key.pem:ro
+      - ./.certs/rootCA.pem:/spire/conf/server/cacert.pem:ro
+
+  spire-agent:
+    build:
+      dockerfile: ./docker/spire/agent/Dockerfile
+    labels:
+      com.example.name: "agent"
+    pid: host  # for discovering PID and container ID of workload containers accessing the workload API
+    volumes:
+      - spire-agent-workload-api-socket:/tmp/spire-agent/public/  # for exposing Workload API socket to workload containers
+      - /var/run/docker.sock:/var/run/docker.sock  # for discovering labels of workload containers running on host system
+      - ./docker/spire/agent/agent.conf:/spire/conf/agent/agent.conf:ro
+      - ./.certs/rootCA.pem:/spire/conf/agent/cacert.pem:ro
+      - ./.certs/agent-key.pem:/spire/conf/agent/agent-key.pem:ro
+      - ./.certs/agent.pem:/spire/conf/agent/agent.pem:ro
+    depends_on:
+      - spire-server
+
+  workload-app:
+    build:
+      dockerfile: ./docker/workload/Dockerfile
+    labels:
+      com.example.name: "app"
+    volumes:
+      - spire-agent-workload-api-socket:/tmp/spire-agent/public/  # for accessing the Workload API socket on the SPIRE agent container
+      - ./docker/workload/helper.conf:/spiffe-helper/helper.conf:ro
+      - ./docker/workload/app/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/workload/app/njs/:/etc/nginx/njs/:ro
+    depends_on:
+      - spire-agent
+
+  workload-client-a:
+    build:
+      dockerfile: ./docker/workload/Dockerfile
+    labels:
+      com.example.name: "client-a"
+    ports:
+      - 8081:80
+      - 9001:9000
+    volumes:
+      - spire-agent-workload-api-socket:/tmp/spire-agent/public/  # for accessing the Workload API socket on the SPIRE agent container
+      - ./docker/workload/helper.conf:/spiffe-helper/helper.conf:ro
+      - ./docker/workload/client/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - spire-agent
+
+  workload-client-b:
+    build:
+      dockerfile: ./docker/workload/Dockerfile
+    labels:
+      com.example.name: "client-b"
+    ports:
+      - 8082:80
+      - 9002:9000
+    volumes:
+      - spire-agent-workload-api-socket:/tmp/spire-agent/public/  # for accessing the Workload API socket on the SPIRE agent container
+      - ./docker/workload/helper.conf:/spiffe-helper/helper.conf:ro
+      - ./docker/workload/client/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - spire-agent
+
+volumes:
+  spire-agent-workload-api-socket:
