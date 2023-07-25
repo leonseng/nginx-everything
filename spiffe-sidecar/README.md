@@ -5,10 +5,13 @@ This repo showcases the use of NGINX as a SPIFFE sidecar, enabling workloads to 
 ![sidecar](./docs/img/sidecar.png)
 
 The sidecar performs the following:
-- uses [SPIFFE Helper](https://github.com/spiffe/spiffe-helper) to periodically retrieve [SPIFFE Verifiable Identity Document (SVID)](https://spiffe.io/docs/latest/spiffe-about/spiffe-concepts/#spiffe-verifiable-identity-document-svid) in the form of x509 certificates
-- uses NGINX to load the above x509-SVID for establishing mutual TLS connections between client and app, as well as to perform authorization based on the DNS name/SPIFFE ID
+- uses [SPIFFE Helper](https://github.com/spiffe/spiffe-helper) to periodically retrieve [SPIFFE Verifiable Identity Document (SVID)](https://spiffe.io/docs/latest/spiffe-about/spiffe-concepts/#spiffe-verifiable-identity-document-svid) in the form of x509 certificates,
+- uses NGINX to load the above x509-SVID for establishing mutual TLS connections between `clients` and `app`,
+- uses [NGINX Javascript (njs)](https://nginx.org/en/docs/njs/) to perform authorization based on the DNS name/SPIFFE ID with a combination of [ssl_*](http://nginx.org/en/docs/http/ngx_http_ssl_module.html)/[proxy_ssl_*](http://nginx.org/en/docs/http/ngx_http_proxy_module.html) directives and a [spiffe.js](./docker/workload/app/njs/spiffe.js) njs script.
 
 ## Demo
+
+This demo shows `app` SPIFFE sidecar allowing `client-a` to access the `app`, by checking `client-a`'s SPIFFE ID against an allow list defined in the [spiffe.js](./docker/workload/app/njs/spiffe.js) njs script. All other SPIFFE IDs will be blocked.
 
 ![setup](./docs/img/setup.png)
 
@@ -40,30 +43,54 @@ export AGENT_SPIFFE_ID="<SPIFFE ID retrieved from previous step>"
 
 Next, register the `app` and `client-a` workloads on the SPIRE server with the following scripts:
 ```
-./scripts/register-app.sh
-./scripts/register-client-a.sh
+$ ./scripts/register-app.sh
+Entry ID         : 3626a644-9b7e-4795-b4de-6e92d9787339
+SPIFFE ID        : spiffe://example.org/app
+Parent ID        : spiffe://example.org/spire/agent/x509pop/e33b934b6742854938895a358e62dd398d9261e9
+Revision         : 0
+X509-SVID TTL    : 10
+JWT-SVID TTL     : default
+Selector         : docker:label:com.example.name:app
+DNS name         : app.example.com
+
+$ ./scripts/register-client-a.sh
+Entry ID         : 22e81a13-416f-42fd-8814-228010acfcca
+SPIFFE ID        : spiffe://example.org/client-a
+Parent ID        : spiffe://example.org/spire/agent/x509pop/e33b934b6742854938895a358e62dd398d9261e9
+Revision         : 0
+X509-SVID TTL    : 10
+JWT-SVID TTL     : default
+Selector         : docker:label:com.example.name:client-a
 ```
 
-Allow up to a minute for the SVID to be picked up by SPIFFE Helper and loaded by NGINX with the `proxy_ssl_*` and `ssl_*` directives, then send a HTTP request against `localhost:8081` which is mapped to `client-a:80`:
+Allow up to a minute for the SVID to be picked up by SPIFFE Helper and loaded by NGINX, then send a HTTP request against `localhost:8081` which is mapped to port `80` on the `client-a` sidecar:
 ```
 $ curl localhost:8081
 OK
 ```
 
-TCP stream is also supported on port `9001`, which maps to `client-a:9000`:
+TCP stream is also supported on port `9001`, which maps to port `9000` on the `client-a` sidecar:
 ```
 $ nc -w1 localhost 9001
 ok
 ```
 
-## Negative test
+---
+### Negative test
 
-To verify that NGINX is validating the client SPIFFE ID, register the second client `client-b` with a SPIFFE ID not in the allow list stored in the [spiffe.js](./docker/workload/app/njs/spiffe.js) NJS script:
+To verify that NGINX is validating the client SPIFFE ID, register the second client `client-b` with a SPIFFE ID not in the allow list:
 ```
-./scripts/register-client-b.sh
+$ ./scripts/register-client-b.sh
+Entry ID         : aac3577a-2897-4848-9299-9cd57dfb2674
+SPIFFE ID        : spiffe://example.org/client-b
+Parent ID        : spiffe://example.org/spire/agent/x509pop/e33b934b6742854938895a358e62dd398d9261e9
+Revision         : 0
+X509-SVID TTL    : 10
+JWT-SVID TTL     : default
+Selector         : docker:label:com.example.name:client-b
 ```
 
-Allow up to a minute for the SVID to be picked up by SPIFFE Helper and loaded by NGINX, then send a HTTP request against `localhost:8082` which maps to `client-b:80`:
+Allow up to a minute for the SVID to be picked up by SPIFFE Helper and loaded by NGINX, then send a HTTP request against `localhost:8082`, mapped to port `80` on the `client-b` sidecar:
 ```
 $ curl localhost:8082
 <html>
@@ -75,7 +102,7 @@ $ curl localhost:8082
 </html>
 ```
 
-Testing against the TCP proxy at `localhost:9001`, which maps to `client-b:9000`, should not return anything:
+Testing against the TCP proxy at `localhost:9001`, which maps to port `9000` on the `client-b` sidecar:, should not return anything:
 ```
 $ nc -w1 localhost 9002
 $
